@@ -1,0 +1,64 @@
+== Escape Character ==
+\\
+== Whitespaces ==
+ 
+\t
+\r
+\n
+
+== Charseq Delimiters ==
+"
+"
+'
+'
+
+== Scope Delimiters ==
+(
+)
+{
+}
+[
+]
+<
+>
+
+== Comments ==
+//
+\n
+#
+\n
+;
+\n
+/*
+*/
+
+== Operators ==
+|
+::=
+,
++
+:
+!
+?
+
+== Linebreaks ==
+;;
+
+== Reserved Keywords ==
+integer
+decimal
+string
+char
+variable
+newline
+constant
+new-type
+operator
+
+== Reserved Constants ==
+raw
+forward
+anon
+contiguous
+
+== EOF ==
