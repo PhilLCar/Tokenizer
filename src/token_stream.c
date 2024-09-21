@@ -56,7 +56,7 @@ void *_in_list(TokenStream *tk, TokenizerCategory tcat)
 // RETURNS 1 if the next character on the stream is a newline, 0 otherwise
 /********************************************************************************/
 int _is_newline(TrackedStream *ts) {
-  return tspeek(ts, 0) == '\n';
+  return speek(ts) == '\n';
 }
 
 // Records the current position of the stream <ts> into the <symbol>
@@ -118,7 +118,7 @@ Token *_(get)()
 
     // BEGIN PARSING LOOP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     do {
-      int               length =  0;
+      int               length = 0;
       TokenizerElement *match  = NULL;
       char              peek0  = tspeek(ts, 0);
       char              peek1  = tspeek(ts, 1);

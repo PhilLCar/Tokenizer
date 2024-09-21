@@ -10,6 +10,7 @@
 #include <array.h>
 #include <diagnostic.h>
 #include <stream.h>
+#include <str.h>
 
 #define TYPENAME TrackedStream
 
@@ -21,19 +22,29 @@ OBJECT (Stream*) INHERIT (Stream)
 END_OBJECT;
 
 // RETURNS a new tracked stream from a <stream> with <lookahead> characters of buffer
-TrackedStream *STATIC(open)(Stream *stream, int lookahead) ALIAS (tsopen);
+TrackedStream *STATIC(open)(Stream *stream, int lookahead);
 
 // Closes the tracked stream
-void _(close)() ALIAS (tsclose);
+void _(close)() VIRTUAL (close);
 
 // RETURNS a character from the tracked stream <ts>
-int _(getc)() ALIAS (tsgetc);
+int _(getc)() VIRTUAL (getc);
 
 // Puts back a character <c> on the tracked stream <ts>
-void _(ungetc)(int c) ALIAS (tsungetc);
+void _(ungetc)(int c) VIRTUAL (ungetc);
 
 // RETURNS the character <distance> places ahead, without altering the stream <ts>
-int _(peek)(int distance) ALIAS (tspeek);
+int _(peek)(int distance);
+
+__attribute__((unused))
+static int (*tspeek)(Stream *, int) = (void*)TrackedStream_peek;
+
+__attribute__((unused))
+static int tspeek1(Stream *s) {
+  return tspeek(s, 1);
+}
+
+FOREIGN_VIRTUAL(peek, tspeek1);
 
 #undef TYPENAME
 #endif

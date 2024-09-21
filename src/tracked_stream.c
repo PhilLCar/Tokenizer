@@ -3,11 +3,13 @@
 #define TYPENAME TrackedStream
 
 ////////////////////////////////////////////////////////////////////////////////
-TrackedStream *_(cons)(Stream *base)
+TYPENAME *_(cons)(Stream *base)
 {
   if (_this && base) {
-    _this->base = *base;
-    free(base);
+    Stream_cons((Stream*)_this, base, STRINGIZE(TYPENAME));
+
+    String_cons(&_this->buffer, "");
+    Array_cons(&_this->linestack, sizeof(int));
   }
   
   return _this;
@@ -18,7 +20,8 @@ void _(free)()
 {
   Array_free(&_this->linestack);
   String_free(&_this->buffer);
-  Stream_close(&_this->base);
+
+  sclose(_this->base.base);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,21 +30,15 @@ TrackedStream *STATIC(open)(Stream *stream, int lookahead)
   TrackedStream *ts = NEW (TrackedStream) (stream);
   
   if (ts) {
-    ts->base.getc   = TrackedStream_getc;
-    ts->base.ungetc = TrackedStream_ungetc;
-    ts->base.peek   = TrackedStream_peek;
-    ts->base.eos    = 0;
-
-    String_cons(&ts->buffer, "");
-    Array_cons(&ts->linestack, sizeof(int));
 
     ts->line      = 0;
     ts->position  = 0;
 
-    for (int i = 0; i < lookahead; i++) String_append(&ts->buffer, Stream_getc(&ts->base));
+    for (int i = 0; i < lookahead; i++) String_append(&ts->buffer, sgetc(ts->base.base));
   } else {
     ts = NULL;
   }
+
   return ts;
 }
 
@@ -57,7 +54,7 @@ int _(getc)()
   char c = _this->buffer.base[0];
 
   for (int i = 0; i < _this->buffer.length - 1; i++) _this->buffer.base[i] = _this->buffer.base[i + 1];
-  _this->buffer.base[_this->buffer.length - 1] = Stream_getc(&_this->base);
+  _this->buffer.base[_this->buffer.length - 1] = sgetc(_this->base.base);
 
   if (c == '\n') {
     ++_this->line;
@@ -73,7 +70,7 @@ int _(getc)()
 ////////////////////////////////////////////////////////////////////////////////
 void _(ungetc)(int c)
 {
-  Stream_ungetc(&_this->base, _this->buffer.base[_this->buffer.length - 1]);
+  sungetc(_this->base.base, _this->buffer.base[_this->buffer.length - 1]);
   for (int i = _this->buffer.length - 1; i > 0; i--) _this->buffer.base[i] = _this->buffer.base[i - 1];
   
   if (c == '\n') {
@@ -96,6 +93,7 @@ int _(peek)(int distance)
     for (int i = distance - _this->buffer.length; i >= 0; i--) String_append(s, TrackedStream_getc(_this));
     peek = _this->buffer.base[distance - _this->buffer.length];
     for (int i = distance - _this->buffer.length; i >= 0; i--) TrackedStream_ungetc(_this, s->base[i]);
+    
     DELETE (s);
   }
 

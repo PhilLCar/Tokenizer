@@ -14,18 +14,10 @@
 
 #define TYPENAME Token
 
-
-#define TOKEN_CAT_NEWLINE  -1
-#define TOKEN_CAT_VARIABLE -2
-#define TOKEN_CAT_NUMBER   -3
-#define TOKEN_CAT_EOS      -4
-#define TOKEN_CAT_VOID     -5
-
 OBJECT (const char*) INHERIT (String)
-  int                                       line;
-  int                                       position;
-  int                                       cat;
-  PAIR(TokenizerElement, TokenizerElement) *delimiters;
+  int line;
+  int position;
+  int group;
 END_OBJECT;
 
 #undef TYPENAME

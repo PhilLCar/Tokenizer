@@ -1,0 +1,92 @@
+# This file is designed to be very easy to parse in order to populate a tokenizer's parameters.
+# Parameters are stored in array form called a "group".
+#
+# Every array must start by the letter code for the tokenizer category optionally followed by its tag.
+# Here are the categories:
+#
+#   X: Escape           (the character(s) following an escape sequence is(are) added to the current token no matter what)
+#   W: Whitespace       (the character or sequence is ignored, the current token is flushed if found ahead)
+#   P: Punctuation      (the character or sequence is always added as a separate token, the current token is flushed if found ahead)
+#   E: Excerpt          (the token will contain every thing inbetween the first and last punctuation using the specified escape)
+#   R: Reserved         (the token is parsed normally, but then compared against listed reserved words)
+#   L: Lookahead match  (if the lookahead matches the regex, starts a lookahead match)
+#   M: Postparse match  (upon flushing a token that was initiated by a specific regex, matches with another regex for additional precision)
+#
+# X and W are optional and can only be defined once if present.
+# P, E, R, L and M can be made of multiple groups identified with a tag, eg "P:Tag1, P:Tag2, ..."
+# E has three dimensions (opening punctuation, closing punctuation, contextual escape sequence)
+# L has two dimensions (lookahead size, regex)
+# M has two dimensions (lookahead tag, regex)
+# All other arrays are one dimension (sequence)
+
+X:
+\\
+
+W:
+\n
+\r
+\s
+\t
+
+P:Scope
+(
+)
+{
+}
+[
+]
+<
+>
+
+P:Operator
+|
+::=
+,
++
+:
+!
+?
+
+P:Line
+;;
+
+E:String
+" " \\
+
+E:Char
+' ' \\
+
+E:Comment
+// \n
+#  \n
+;  \n
+/* */
+
+R:Keyword
+integer
+decimal
+string
+char
+variable
+newline
+constant
+new-type
+operator
+
+R:Modifier
+raw
+forward
+anon
+contiguous
+
+L:Number
+1 ^[0-9]
+2 ^.[0-9]
+1 ^0x
+2 ^0[1-7]
+
+M:Decimal
+Number .*\..*
+
+M:Integer
+Number ^[^\.]*$
