@@ -11,10 +11,9 @@ TYPENAME *_(cons)(const char *filename)
     Map         *subsection = NULL;
     ObjectArray *list       = NULL;
 
-    _this->content = NEW (Map) (sizeof(String), sizeof(String), (Comparer)String_equals);
-
-    if (_this->content) {
-      Map_setkey(_this->content, "", NEW (ObjectArray) (sizeof(String)));
+    if (Map_cons(BASE(0), sizeof(String), sizeof(String), (Comparer)String_equals)) {
+      Map_setkey(BASE(0), "", NEW (ObjectArray) (sizeof(String)));
+      _this->filename = filename;
 
       do {
         String *line = sgetline(file);
@@ -36,8 +35,8 @@ TYPENAME *_(cons)(const char *filename)
               subname  = line;
             }
 
-            if (!(subsection = Map_vatkey(_this->content, sectname))) {
-              subsection = Map_setkey(_this->content, sectname, NEW (Map) (sizeof(String), sizeof(ObjectArray), (Comparer)String_equals))->second;
+            if (!(subsection = Map_vatkey(BASE(0), sectname))) {
+              subsection = Map_setkey(BASE(0), sectname, NEW (Map) (sizeof(String), sizeof(ObjectArray), (Comparer)String_equals))->second;
             }
 
             if (!(list = Map_vatkey(subsection, subname))) {
@@ -67,6 +66,19 @@ TYPENAME *_(cons)(const char *filename)
 ////////////////////////////////////////////////////////////////////////////////
 void _(free)()
 {
-  DELETE (_this->content);
+  Map_free(BASE(0));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+ObjectArray *_(slist)(const char *subsection)
+{
+  String subsect;
+
+  String_cons(&subsect, subsection);
+
+  ObjectArray *list = Map_vatkey(Map_vatkey(BASE(0), ""), &subsect);
+
+  String_free(&subsect);
+
+  return list;
+}

@@ -44,18 +44,13 @@ The functions of this object serve to facilitate navigation through this object
 
 */
 
-OBJECT (const char* filename)
-  Map *content;
+OBJECT (const char* filename) INHERIT (Map)
+  const char *filename;
 END_OBJECT;
 
-Map *_(section)(const char *section_name);
-Map *_(default_section)();
+ObjectArray *_(slist)(const char *subsection);
 
-ObjectArray *STATIC (subsection) (Map *section, const char *subsection_name);
-
-ObjectArray *STATIC (default_subsection)(const char *subsection_name);
-
-ObjectArray* _(list)(const char *section_name, const char *subsection_name);
+ObjectArray *_(list)(const char *section, const char *subsection);
 
 #undef TYPENAME
 #endif
