@@ -1,5 +1,5 @@
-#ifndef TRACKED_STREAM_H
-#define TRACKED_STREAM_H
+#ifndef TRACKEDSTREAM_H
+#define TRACKEDSTREAM_H
 
 // C
 #include <stdio.h>

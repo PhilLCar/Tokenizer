@@ -1,0 +1,52 @@
+{
+  "whitespaces" : [
+    " ",
+    "\r",
+    "\n",
+    "\t"
+  ],
+  "symbols" : {
+    "scope" : [
+      "{",
+      "}",
+      "[",
+      "]"
+    ],
+    "punctuation" : [
+      ":",
+      ","
+    ]
+  },
+  "context" : {
+    "string" : {
+      "escape" : "\\",
+      "open" : "\"",
+      "close" : "\""
+    },
+    "line-comment" : {
+      "open" : "//",
+      "close" : "\n"
+    },
+    "multi-comment" : {
+      "open" : "/*",
+      "close" : "*/"
+    }
+  },
+  "reserved" : {
+    "test" : [
+      "none",
+      "other"
+    ]
+  },
+  "regex" : [
+    {
+      "number" : {
+        "init" : "^[0-9]",
+        "post" : {
+          "decimal" : "^.*\\..*$",
+          "integer" : "$^[^\\.]*$"
+        }
+      }
+    }
+  ]
+}

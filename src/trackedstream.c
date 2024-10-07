@@ -1,4 +1,4 @@
-#include <tracked_stream.h>
+#include <trackedstream.h>
 
 #define TYPENAME TrackedStream
 
@@ -25,7 +25,7 @@ TrackedStream *_(cons)(CharStream *stream, int lookahead)
 ////////////////////////////////////////////////////////////////////////////////
 void _(free)()
 {
-  CharStream_free(this);
+  CharStream_free(BASE(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ void *_(get)()
 
   if (c == '\n') {
     ++this->line;
-    Array_push(&this->linestack, this->position);
+    Array_push(&this->linestack, &this->position);
     this->position = 0;
   } else ++this->position;
 
@@ -74,7 +74,7 @@ void _(put)(void *token)
 {
   char c = (long)token;
 
-  CharStream_put(this, c);
+  CharStream_put(BASE(0), c);
   ++this->position;
 }
 
@@ -87,9 +87,9 @@ int _(peek)(int distance)
   else {
     String *s = NEW (String) ("");
     
-    for (int i = distance - this->buffer.length; i >= 0; i--) String_append(s, TrackedStream_getc(this));
+    for (int i = distance - this->buffer.length; i >= 0; i--) String_append(s, CharStream_get(BASE(1)->base));
     peek = this->buffer.base[distance - this->buffer.length];
-    for (int i = distance - this->buffer.length; i >= 0; i--) TrackedStream_ungetc(this, s->base[i]);
+    for (int i = distance - this->buffer.length; i >= 0; i--) CharStream_unget(BASE(1)->base, s->base[i]);
     
     DELETE (s);
   }
