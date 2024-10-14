@@ -3,7 +3,7 @@
 #define TYPENAME TokenizerContext
 
 ////////////////////////////////////////////////////////////////////////////////
-TokenizerContext *_(cons)(int id, const Map *map)
+TokenizerContext *_(cons)(const Map *map)
 {
   if (this) {
     String *escape = Map_vatkey((Map*)map, "escape");
@@ -11,7 +11,6 @@ TokenizerContext *_(cons)(int id, const Map *map)
     String *close  = Map_vatkey((Map*)map, "close");
 
     if (open) {
-      this->id     = id;
       this->escape = escape ? escape->base[0] : 0;
       this->open   = NEW (String) (open->base);
       this->close  = NEW (String) (close ? close->base : "\n");

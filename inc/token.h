@@ -11,7 +11,7 @@
 OBJECT (const char*) INHERIT (String)
   int line;
   int position;
-  int catid;
+  int group;
 END("");
 
 #undef TYPENAME

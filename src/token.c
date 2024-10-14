@@ -8,7 +8,7 @@ Token *_(cons)(const char *text) {
     String_cons((String*)this, text);
     this->line       = 0;
     this->position   = 0;
-    this->category   = 0;
+    this->group      = 0;
   }
 
   return this;

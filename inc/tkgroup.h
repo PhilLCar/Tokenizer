@@ -6,20 +6,15 @@
 #include <oop.h>
 #include <str.h>
 #include <objectarray.h>
-#include <tkcontext.h>
+
+#include "tkcontext.h"
 
 #define TYPENAME TokenizerGroup
 
-typedef struct {
-  int start; // inclusive
-  int end;   // exclusive
-} Interval;
-
-OBJECT (int id, const TokenizerContext *context)
-  int                     id;
-  const TokenizerContext *context;
-  Array                  *intervals;
-END(0, NULL);
+OBJECT (const String *name)
+  String           *name;
+  TokenizerContext *context;
+END(NULL);
 
 #undef TYPENAME
 #endif

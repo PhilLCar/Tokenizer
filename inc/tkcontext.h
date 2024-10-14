@@ -9,12 +9,11 @@
 
 #define TYPENAME TokenizerContext
 
-OBJECT (int id, const Map *map)
-  int     id;
+OBJECT (const Map *map)
   char    escape;
   String *open;
   String *close;
-END(0, NULL);
+END(NULL);
 
 #undef TYPENAME
 #endif

@@ -74,8 +74,19 @@ void _(put)(void *token)
 {
   char c = (long)token;
 
-  CharStream_put(BASE(0), c);
-  ++this->position;
+  CharStream_put(BASE(1)->base, c);
+  if (c == '\n') {
+    ++this->line;
+    this->position = 0;
+  } else ++this->position;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void _(skip)(int distance)
+{
+  for (int i = 0; i < distance; i++) {
+    TrackedStream_get(this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

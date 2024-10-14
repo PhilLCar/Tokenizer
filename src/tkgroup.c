@@ -3,12 +3,11 @@
 #define TYPENAME TokenizerGroup
 
 ////////////////////////////////////////////////////////////////////////////////
-TokenizerGroup *_(cons)(int id, const TokenizerContext *context)
+TokenizerGroup *_(cons)(const String *name)
 {
   if (this) {
-    this->id        = id;
-    this->context   = context;
-    this->intervals = NEW (Array) (sizeof(Interval));
+    this->name    = NEW (String) (name->base);
+    this->context = NULL;
   }
 
   return this;
@@ -17,5 +16,6 @@ TokenizerGroup *_(cons)(int id, const TokenizerContext *context)
 ////////////////////////////////////////////////////////////////////////////////
 void _(free)()
 {
-  DELETE (this->intervals);
+  DELETE (this->name)
+  DELETE (this->context);
 }

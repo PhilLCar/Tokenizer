@@ -7,8 +7,8 @@
 #include <string.h>
 
 // CUT
-#include <array.h>
 #include <diagnostic.h>
+#include <array.h>
 #include <charstream.h>
 #include <str.h>
 
@@ -26,6 +26,7 @@ void *_(get)  ()            VIRTUAL (get);
 void  _(unget)(void *token) VIRTUAL (unget);
 void  _(put)  (void *token) VIRTUAL (put);
 
+void _(skip)(int distance);
 
 int _(peek)(int distance);
 

@@ -10,20 +10,27 @@
 #include <diagnostic.h>
 #include <json.h>
 #include <set.h>
+#include <rgx.h>
+
+#include "tkcontext.h"
+#include "tkgroup.h"
 
 #define TYPENAME Tokenizer
 
-OBJECT (const JSON *config)
+OBJECT (Map *config)
   int          lookahead;
   String      *whitespaces;
   ObjectArray *symbols;
-  ObjectArray *tags;
+  Map         *keywords;
+  Map         *regexes;
   ObjectArray *groups;
-  ObjectArray *contexts;
-  ObjectArray *regexes;
-  Map         *reserved;
 END(NULL);
 
+int _(group)(const char *name);
+int _(whitespace)(String *search);
+int _(symbol)(String *search, int *size);
+int _(regex)(String *search);
+int _(keyword)(String *search);
 
 
 #undef TYPENAME

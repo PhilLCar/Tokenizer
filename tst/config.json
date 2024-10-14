@@ -1,11 +1,11 @@
 {
-  "whitespaces" : [
+  "whitespace" : [
     " ",
     "\r",
     "\n",
     "\t"
   ],
-  "symbols" : {
+  "symbol" : {
     "scope" : [
       "{",
       "}",
@@ -32,21 +32,14 @@
       "close" : "*/"
     }
   },
-  "reserved" : {
+  "keyword" : {
     "test" : [
       "none",
       "other"
     ]
   },
-  "regex" : [
-    {
-      "number" : {
-        "init" : "^[0-9]",
-        "post" : {
-          "decimal" : "^.*\\..*$",
-          "integer" : "$^[^\\.]*$"
-        }
-      }
-    }
-  ]
+  "regex" : {
+    "decimal" : "^[0-9].*\\..*$",
+    "integer" : "^[0-9][^\\.]*$"
+  }
 }
