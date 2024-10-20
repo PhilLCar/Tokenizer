@@ -1,7 +1,6 @@
-#include <diagnostic.h>
 #include <jsonfile.h>
-#include <filestream.h>
 #include <tokenstream.h>
+#include <diagnostic.h>
 
 int main(void)
 {
