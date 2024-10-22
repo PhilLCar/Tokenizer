@@ -11,6 +11,7 @@
 #include <json.h>
 #include <set.h>
 #include <rgx.h>
+#include <jsonfile.h>
 
 #include "tkcontext.h"
 #include "tkgroup.h"
@@ -32,6 +33,7 @@ int _(symbol)(String *search, int *size);
 int _(regex)(String *search);
 int _(keyword)(String *search);
 
+Tokenizer *STATIC (open)(const char *filename);
 
 #undef TYPENAME
 #endif

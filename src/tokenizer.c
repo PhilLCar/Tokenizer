@@ -174,7 +174,7 @@ void _(free)()
 	DELETE (this->symbols);
 	DELETE (this->keywords);
 	DELETE (this->regexes);
-	DELETE (this->regexes);
+	DELETE (this->groups);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ int _(regex)(String *search)
 ////////////////////////////////////////////////////////////////////////////////
 int _(keyword)(String *search)
 {
-	for (int i = 0; i < search->length; i++) {
+	for (int i = 0; i < ((Array*)this->keywords)->size; i++) {
 		Pair *current = Array_at((Array*)this->keywords, i);
 
 		int   *id       = current->first.object;
@@ -268,4 +268,9 @@ int _(keyword)(String *search)
 	}
 
 	return -1;
+}
+
+Tokenizer *STATIC (open)(const char *filename)
+{
+	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename));
 }

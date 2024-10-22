@@ -14,9 +14,8 @@
 
 #define TYPENAME TokenStream
 
-OBJECT (CharStream *stream, Map *config) INHERIT (Stream)
+OBJECT (const Tokenizer *tokenizer, CharStream *stream) INHERIT (Stream)
   Tokenizer     *tokenizer;
-  TrackedStream *ts;
   ObjectArray   *next;
 END(NULL, NULL);
 
@@ -26,7 +25,7 @@ Token *_(get)  ()             VIRTUAL (get);
 void   _(unget)(Token *token) VIRTUAL (unget);
 void   _(put)  (Token *token) VIRTUAL (put);
 
-TokenStream *STATIC (open) (const char *filename, const char *config);
+TokenStream *STATIC (open) (const Tokenizer *tokenizer, const char *filename);
 
 #undef TYPENAME
 #endif

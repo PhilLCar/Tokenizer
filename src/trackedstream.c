@@ -44,11 +44,17 @@ int _(get)()
   for (int i = 0; i < this->buffer.length - 1; i++) this->buffer.base[i] = this->buffer.base[i + 1];
   this->buffer.base[this->buffer.length - 1] = CharStream_get(BASE(1)->base);
 
+  if (((Stream*)BASE(1)->base)->eos) {
+    this->buffer.base[this->buffer.length - 1] = 0;
+  }
+
   if (c == '\n') {
     ++this->line;
     Array_push(&this->linestack, &this->position);
     this->position = 0;
   } else ++this->position;
+
+  BASE(1)->eos = !c;
 
   return c;
 }
@@ -65,6 +71,8 @@ void _(unget)(int c)
   } else --this->position;
   
   this->buffer.base[0] = c;
+
+  BASE(1)->eos = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

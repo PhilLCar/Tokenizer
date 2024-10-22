@@ -3,12 +3,13 @@
 #define TYPENAME TokenStream
 
 ////////////////////////////////////////////////////////////////////////////////
-TokenStream *_(cons)(CharStream *stream, Map *config)
+TokenStream *_(cons)(const Tokenizer *tokenizer, CharStream *stream)
 {
   if (this) {
-    this->tokenizer = NEW (Tokenizer)     (config);
-		this->ts        = NEW (TrackedStream) (stream, this->tokenizer->lookahead);
+    this->tokenizer = (Tokenizer*)tokenizer;
     this->next      = NEW (ObjectArray)   (OBJECT_TYPE(Token));
+
+    Stream_cons(BASE(0), NEW (TrackedStream) (stream, this->tokenizer->lookahead));
   }
 
   return this;
@@ -23,7 +24,7 @@ void _(free)()
 ////////////////////////////////////////////////////////////////////////////////
 void _(close)()
 {
-  DELETE (this->ts);
+  DELETE (*BASE(1));
   DELETE (this->next);
 }
 
@@ -43,7 +44,8 @@ Token *_(peek)()
 ////////////////////////////////////////////////////////////////////////////////
 Token *_(get)()
 {
-  Token *token = NULL;
+  TrackedStream *ts    = *BASE(1);
+  Token         *token = NULL;
 
   if (this->next->base.size > 0) {
     token = ObjectArray_pop(this->next, 1);
@@ -52,17 +54,17 @@ Token *_(get)()
 
     token = NEW (Token) ("");
 
-    while (!((Stream*)this->ts)->eos) {
+    while (!((Stream*)ts)->eos) {
       int new = !((String*)token)->length;
 
-      if (Tokenizer_whitespace(this->tokenizer, &this->ts->buffer) >= 0) {
-        CharStream_get((CharStream*)this->ts);
+      if (Tokenizer_whitespace(this->tokenizer, &ts->buffer) >= 0) {
+        CharStream_get((CharStream*)ts);
         if (new) continue;
         else     break;
       } else {
         int size = 0;
 
-        if ((group = Tokenizer_symbol(this->tokenizer, &this->ts->buffer, &size)) >= 0) {
+        if ((group = Tokenizer_symbol(this->tokenizer, &ts->buffer, &size)) >= 0) {
           Token *next;
 
           if (new) {
@@ -72,10 +74,13 @@ Token *_(get)()
             next = TokenStream_peek(this);
           }
 
-          next->line     = this->ts->line;
-          next->position = this->ts->position;
+          next->line     = ts->line;
+          next->position = ts->position;
           next->group    = group;
-          TrackedStream_skip(this->ts, size);
+          
+          for (int i = 0; i < size; i++) {
+            String_append((String*)next, TrackedStream_get(ts));
+          }
 
           {
             TokenizerGroup *tkgroup = Array_at((Array*)this->tokenizer->groups, group);
@@ -84,29 +89,34 @@ Token *_(get)()
               String_free((String*)next);
               String_cons((String*)next, "");
 
-              while (!((Stream*)this->ts)->eos && !String_strw(&this->ts->buffer, tkgroup->context->close->base)) {
-                String_append((String*)next, CharStream_readwith((CharStream*)this->ts, tkgroup->context->escape));
+              while (!BASE(0)->eos && !String_strw(&ts->buffer, tkgroup->context->close->base)) {
+                String_append((String*)next, CharStream_readwith((CharStream*)ts, tkgroup->context->escape));
               }
 
-              TrackedStream_skip(this->ts, tkgroup->context->close->length);
+              TrackedStream_skip(ts, tkgroup->context->close->length);
             }
           }
           break;
         } else {
           if (new) {
-            token->line     = this->ts->line;
-            token->position = this->ts->position;
+            token->line     = ts->line;
+            token->position = ts->position;
           }
 
-          String_append((String*)token, CharStream_get((CharStream*)this->ts));
+          String_append((String*)token, CharStream_get((CharStream*)ts));
         }
       }
     }
     
     if ((group = Tokenizer_keyword(this->tokenizer, (String*)token)) >= 0 
-     || (group = Tokenizer_regex(this->tokenizer, (String*)token)) >= 0) {
+     || (group = Tokenizer_regex  (this->tokenizer, (String*)token)) >= 0) {
       token->group = group;
     }
+  }
+  
+  if (String_eq((String*)token, "")) {
+    DELETE (token);
+    BASE(0)->eos = 1;
   }
 
   return token;
@@ -116,29 +126,30 @@ Token *_(get)()
 void _(unget)(Token *token)
 {
   ObjectArray_push(this->next, token);
+  BASE(0)->eos = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void _(put)(Token *token)
 {
+  TrackedStream *ts = *BASE(1);
+
   { // Attempt to the put the token back on stream exactly where it was
-    while (this->ts->line < token->line) {
-      CharStream_put((CharStream*)this->ts, '\n');
+    while (ts->line < token->line) {
+      CharStream_put((CharStream*)ts, '\n');
     }
 
-    while (this->ts->position < token->position) {
-      CharStream_put((CharStream*)this->ts, ' ');
+    while (ts->position < token->position) {
+      CharStream_put((CharStream*)ts, ' ');
     }
   }
 
   for (int i = 0, c; (c = token->base.base[i]); i++) {
-    CharStream_put((CharStream*)this->ts, c);
+    CharStream_put((CharStream*)ts, c);
   }
 }
 
-TokenStream *STATIC (open)(const char *filename, const char *config)
+TokenStream *STATIC (open)(const Tokenizer *tokenizer, const char *filename)
 {
-  return NEW (TokenStream)(
-    (CharStream*) NEW (FileStream) (fopen(filename, "r")), 
-    (Map*)        NEW (JSONFile)   (config));
+  return NEW (TokenStream)(tokenizer, (CharStream*) NEW (FileStream) (fopen(filename, "r")));
 }
