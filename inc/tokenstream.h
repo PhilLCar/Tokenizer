@@ -20,11 +20,11 @@ OBJECT (CharStream *stream, Map *config) INHERIT (Stream)
   ObjectArray   *next;
 END(NULL, NULL);
 
-void  _(close)()            VIRTUAL (close);
-void *_(peek) ()            VIRTUAL (peek);
-void *_(get)  ()            VIRTUAL (get);
-void  _(unget)(void *token) VIRTUAL (unget);
-void  _(put)  (void *token) VIRTUAL (put);
+void   _(close)()             VIRTUAL (close);
+Token *_(peek) ()             VIRTUAL (peek);
+Token *_(get)  ()             VIRTUAL (get);
+void   _(unget)(Token *token) VIRTUAL (unget);
+void   _(put)  (Token *token) VIRTUAL (put);
 
 TokenStream *STATIC (open) (const char *filename, const char *config);
 

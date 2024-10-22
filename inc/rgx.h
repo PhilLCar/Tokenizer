@@ -12,7 +12,7 @@
 
 OBJECT (const char *regex)
   regex_t regex;
-END(NULL);
+END("");
 
 int _(matches)(const char *text);
 

@@ -28,7 +28,7 @@ void _(close)()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void *_(peek)()
+Token *_(peek)()
 {
   if (!this->next->base.size) 
   {
@@ -41,7 +41,7 @@ void *_(peek)()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void *_(get)()
+Token *_(get)()
 {
   Token *token = NULL;
 
@@ -113,27 +113,25 @@ void *_(get)()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(unget)(void *token)
+void _(unget)(Token *token)
 {
   ObjectArray_push(this->next, token);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(put)(void *token)
+void _(put)(Token *token)
 {
-  Token *t = token;
-
   { // Attempt to the put the token back on stream exactly where it was
-    while (this->ts->line < t->line) {
+    while (this->ts->line < token->line) {
       CharStream_put((CharStream*)this->ts, '\n');
     }
 
-    while (this->ts->position < t->position) {
+    while (this->ts->position < token->position) {
       CharStream_put((CharStream*)this->ts, ' ');
     }
   }
 
-  for (int i = 0, c; (c = t->base.base[i]); i++) {
+  for (int i = 0, c; (c = token->base.base[i]); i++) {
     CharStream_put((CharStream*)this->ts, c);
   }
 }

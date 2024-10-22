@@ -3,19 +3,25 @@
 #define TYPENAME Tokenizer
 
 /******************************************************************************/
+int STATIC (_intcmp)(const void *a, const void *b)
+{
+	return *(int*)b - *(int*)a;
+}
+
+/******************************************************************************/
 int STATIC (_lookahead)(Map *config)
 {
 	int lookahead = 1;
 
-	Array *symbols  = Map_vatkey(config, "symbol");
-	Array *contexts = Map_vatkey(config, "context");
+	Array *symbols  = Map_vatkeyptr(config, "symbol");
+	Array *contexts = Map_vatkeyptr(config, "context");
 
 	for (int i = 0; i < symbols->size; i++) {
 		Pair  *current = Array_at(symbols, i);
-		Array *list    = current->second.object;
+		Array *list    = Pair_sptr(current);
 
 		for (int j = 0; j < list->size; j++) {
-			String *symbol = Array_at(list, j);
+			String *symbol = Array_atptr(list, j);
 
 			if (symbol->length > lookahead) lookahead = symbol->length;
 		}
@@ -23,8 +29,8 @@ int STATIC (_lookahead)(Map *config)
 
 	for (int i = 0; i < contexts->size; i++) {
 		Pair   *current = Array_at(contexts, i);
-		Map    *context = current->second.object;
-		String *symbol  = Map_vatkey(context, "open");
+		Map    *context = Pair_sptr(current);
+		String *symbol  = Map_vatkeyptr(context, "open");
 		
 		if (symbol->length > lookahead) lookahead = symbol->length;
 	}
@@ -46,7 +52,7 @@ int _(_creategroup)(const String *name, const Map *context)
 }
 
 /******************************************************************************/
-void _(_mapadd)(Map *map, void *key, void *element)
+void _(_mapadd)(Map *map, int *key, void *element)
 {
 	Pair *pair = NULL;
 
@@ -65,13 +71,13 @@ void _(_mapadd)(Map *map, void *key, void *element)
 /******************************************************************************/
 void _(_iterate)(Map *config, const char *tag, const void (*addgroup)(Tokenizer*, void*, int))
 {
-	Array *section = Map_vatkey(config, tag);
+	Array *section = Map_vatkeyptr(config, tag);
 
 	for (int i = 0; i < section->size; i++) {
 		Pair *current = Array_at(section, i);
 
 		String *name   = current->first.object;
-		void   *object = current->second.object;
+		void   *object = Pair_sptr(current);
 
 		int groupid = Tokenizer__creategroup(this, name, NULL);
 
@@ -82,7 +88,7 @@ void _(_iterate)(Map *config, const char *tag, const void (*addgroup)(Tokenizer*
 /******************************************************************************/
 void _(_whitespace)(Map *config)
 {
-	Array *whitespaces = Map_vatkey(config, "whitespace");
+	Array *whitespaces = Map_vatkeyptr(config, "whitespace");
 
 	for (int i = 0; i < whitespaces->size; i++) {
 		String_append(this->whitespaces, ((String*)Array_atptr(whitespaces, i))->base[0]);
@@ -93,35 +99,35 @@ void _(_whitespace)(Map *config)
 void _(_symbol)(void *symbols, int groupid)
 {
 	for (int j = 0; j < ((Array*)symbols)->size; j++) {
-		String *symbol    = Array_at(symbols, j);
+		String *symbol    = Array_atptr(symbols, j);
 		Map    *dimension = Array_at((Array*)this->symbols, symbol->length - 1);
 
-		Tokenizer__mapadd(this, dimension, &groupid, symbol);
+		Tokenizer__mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
 	}
 }
 
 void _(_keyword)(void *keywords, int groupid)
 {
 	for (int j = 0; j < ((Array*)keywords)->size; j++) {
-		String *keyword = Array_at(keywords, j);
+		String *keyword = Array_atptr(keywords, j);
 		
-		Tokenizer__mapadd(this, this->keywords, &groupid, keyword);
+		Tokenizer__mapadd(this, this->keywords, &groupid, NEW (String) (keyword->base));
 	}
 }
 
 void _(_context)(void *context, int groupid)
 {
-	String *symbol    = Map_vatkey(context, "open");
+	String *symbol    = Map_vatkeyptr(context, "open");
 	Map    *dimension = Array_at((Array*)this->symbols, symbol->length - 1);
 
-	Tokenizer__mapadd(this, dimension, &groupid, symbol);
+	Tokenizer__mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
 
 	((TokenizerGroup*)Array_at((Array*)this->groups, groupid))->context = NEW (TokenizerContext) (context);
 }
 
 void _(_regex)(void *regex, int groupid)
 {
-	Map_setkey(this->regexes, &groupid, ((String*)regex)->base);
+	Map_setkey(this->regexes, &groupid, NEW (Regex) (((String*)regex)->base));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,8 +137,9 @@ Tokenizer *_(cons)(Map *config)
 		this->lookahead   = Tokenizer__lookahead(config);
 		this->whitespaces = NEW (String) ("");
 		this->symbols     = NEW (ObjectArray) (OBJECT_TYPE(Map));
-		this->keywords    = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(String), NULL);
-		this->regexes     = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(String), NULL);
+		this->keywords    = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer__intcmp);
+		this->regexes     = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(Regex),       Tokenizer__intcmp);
+		this->groups      = NEW (ObjectArray) (OBJECT_TYPE(TokenizerGroup));
 		
 
 		if (this->whitespaces 
@@ -141,7 +148,7 @@ Tokenizer *_(cons)(Map *config)
 		 && this->regexes
 		 && this->groups) {
 			for (int i = 0; i < this->lookahead; i++) {
-				ObjectArray_push(this->symbols, NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), NULL));
+				ObjectArray_push(this->symbols, NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer__intcmp));
 			}
 
 			Tokenizer__whitespace(this, config);

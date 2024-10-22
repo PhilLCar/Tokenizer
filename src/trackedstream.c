@@ -37,9 +37,9 @@ void _(close)()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void *_(get)()
+int _(get)()
 {
-  long c = this->buffer.base[0];
+  int c = this->buffer.base[0];
 
   for (int i = 0; i < this->buffer.length - 1; i++) this->buffer.base[i] = this->buffer.base[i + 1];
   this->buffer.base[this->buffer.length - 1] = CharStream_get(BASE(1)->base);
@@ -50,14 +50,12 @@ void *_(get)()
     this->position = 0;
   } else ++this->position;
 
-  return (void*)c;
+  return c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(unget)(void *token)
+void _(unget)(int c)
 {
-  char c = (long)token;
-
   CharStream_unget(BASE(1)->base, this->buffer.base[this->buffer.length - 1]);
   for (int i = this->buffer.length - 1; i > 0; i--) this->buffer.base[i] = this->buffer.base[i - 1];
   
@@ -70,10 +68,8 @@ void _(unget)(void *token)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(put)(void *token)
+void _(put)(int c)
 {
-  char c = (long)token;
-
   CharStream_put(BASE(1)->base, c);
   if (c == '\n') {
     ++this->line;
