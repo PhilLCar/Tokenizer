@@ -47,6 +47,8 @@ Token *_(get)()
   TrackedStream *ts    = *BASE(1);
   Token         *token = NULL;
 
+  if (BASE(0)->eos) return token;
+
   if (this->next->base.size > 0) {
     token = ObjectArray_pop(this->next, 1);
   } else {
@@ -55,56 +57,51 @@ Token *_(get)()
     token = NEW (Token) ("");
 
     while (!((Stream*)ts)->eos) {
-      int new = !((String*)token)->length;
+      int new  = !((String*)token)->length;
+      int size = 0;
 
       if (Tokenizer_whitespace(this->tokenizer, &ts->buffer) >= 0) {
         CharStream_get((CharStream*)ts);
         if (new) continue;
         else     break;
-      } else {
-        int size = 0;
+      } else if ((group = Tokenizer_symbol(this->tokenizer, &ts->buffer, &size)) >= 0) {
+        TokenizerGroup *tkgroup = Array_at((Array*)this->tokenizer->groups, group);
+        Token          *next;
 
-        if ((group = Tokenizer_symbol(this->tokenizer, &ts->buffer, &size)) >= 0) {
-          Token *next;
-
-          if (new) {
-            next = token;
-          } else {
-            TokenStream_unget(this, NEW (Token)(""));
-            next = TokenStream_peek(this);
-          }
-
-          next->line     = ts->line;
-          next->position = ts->position;
-          next->group    = group;
-          
-          for (int i = 0; i < size; i++) {
-            String_append((String*)next, TrackedStream_get(ts));
-          }
-
-          {
-            TokenizerGroup *tkgroup = Array_at((Array*)this->tokenizer->groups, group);
-
-            if (tkgroup->context) {
-              String_free((String*)next);
-              String_cons((String*)next, "");
-
-              while (!BASE(0)->eos && !String_strw(&ts->buffer, tkgroup->context->close->base)) {
-                String_append((String*)next, CharStream_readwith((CharStream*)ts, tkgroup->context->escape));
-              }
-
-              TrackedStream_skip(ts, tkgroup->context->close->length);
-            }
-          }
-          break;
+        if (new) {
+          next = token;
         } else {
-          if (new) {
-            token->line     = ts->line;
-            token->position = ts->position;
+          TokenStream_unget(this, NEW (Token)(""));
+          next = TokenStream_peek(this);
+        }
+
+        next->line     = ts->line;
+        next->position = ts->position;
+        next->group    = group;
+        
+        for (int i = 0; i < size; i++) {
+          String_append((String*)next, TrackedStream_get(ts));
+        }
+
+        if (tkgroup->context) {
+          String_free((String*)next);
+          String_cons((String*)next, "");
+
+          while (!((Stream*)ts)->eos && !String_strw(&ts->buffer, tkgroup->context->close->base)) {
+            String_append((String*)next, CharStream_readwith((CharStream*)ts, tkgroup->context->escape));
           }
 
-          String_append((String*)token, CharStream_get((CharStream*)ts));
+          TrackedStream_skip(ts, tkgroup->context->close->length);
         }
+        
+        break;
+      } else {
+        if (new) {
+          token->line     = ts->line;
+          token->position = ts->position;
+        }
+
+        String_append((String*)token, CharStream_get((CharStream*)ts));
       }
     }
     
