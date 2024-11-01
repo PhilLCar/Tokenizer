@@ -3,23 +3,29 @@
 #define TYPENAME Regex
 
 ////////////////////////////////////////////////////////////////////////////////
-Regex *_(cons)(const char *regex)
+Regex *_(Construct)(const char *regex)
 {
   if (this) {    
-    regcomp(&this->regex, regex, 0);
+    regcomp(BASE(0), regex, 0);
+  } else {
+    THROW(NEW (MemoryAllocationException)());
   }
 
   return this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(free)()
+void _(Destruct)()
 {
-  regfree(&this->regex);
+  if (this) {
+    regfree(BASE(0));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(matches)(const char *text)
+int CONST (Matches)(const char *text)
 {
-  return !regexec(&this->regex, text, 0, NULL, 0);
+  return !regexec(BASE(0), text, 0, NULL, 0);
 }
+
+#undef TYPENAME

@@ -19,26 +19,23 @@ OBJECT (CharStream *stream, int lookahead) INHERIT (CharStream)
   Array  linestack;
   int    line;
   int    position;
-END(NULL, 0);
+END_OBJECT(NULL, 0);
 
-void  _(close)()      VIRTUAL (close);
-int   _(get)  ()      VIRTUAL (get);
-void  _(unget)(int c) VIRTUAL (unget);
-void  _(put)  (int c) VIRTUAL (put);
+void  _(Close)()      VIRTUAL (Close);
+int   _(Get)  ()      VIRTUAL (Get);
+void  _(Unget)(int c) VIRTUAL (Unget);
+void  _(Put)  (int c) VIRTUAL (Put);
 
-void _(skip)(int distance);
+void _(Skip)(int distance);
 
-int _(peek)(int distance);
-
-__attribute__((unused))
-static int (*tspeek)(TrackedStream*, int) = TrackedStream_peek;
+int _(Peek)(int distance);
 
 __attribute__((unused))
 static int _tspeek(TrackedStream *stream) {
-  return TrackedStream_peek(stream, 1);
+  return TrackedStream_Peek(stream, 1);
 }
 
-FOREIGN_VIRTUAL(peek, _tspeek);
+FOREIGN_VIRTUAL(Peek, _tspeek);
 
 #undef TYPENAME
 #endif

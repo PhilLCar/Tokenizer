@@ -3,10 +3,9 @@
 #define TYPENAME TokenizerGroup
 
 ////////////////////////////////////////////////////////////////////////////////
-TokenizerGroup *_(cons)(const String *name)
+TokenizerGroup *_(Construct)(const String *name)
 {
-  if (this) {
-    this->name    = NEW (String) (name->base);
+  if (String_Construct(BASE(0), name->base)) {
     this->context = NULL;
   }
 
@@ -14,8 +13,13 @@ TokenizerGroup *_(cons)(const String *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(free)()
+void _(Destruct)()
 {
-  DELETE (this->name)
-  DELETE (this->context);
+  if (this)
+  {
+    String_Destruct(BASE(0));
+    DELETE (this->context);
+  }
 }
+
+#undef TYPENAME

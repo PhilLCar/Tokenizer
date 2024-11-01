@@ -12,7 +12,7 @@ OBJECT (const char*) INHERIT (String)
   int line;
   int position;
   int group;
-END("");
+END_OBJECT("");
 
 #undef TYPENAME
 #endif

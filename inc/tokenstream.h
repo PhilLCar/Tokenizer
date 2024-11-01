@@ -3,29 +3,29 @@
 
 // CUT
 #include <diagnostic.h>
-#include <token.h>
-#include <tokenizer.h>
 #include <jsonfile.h>
 #include <filestream.h>
-#include <trackedstream.h>
 #include <map.h>
 #include <array.h>
 #include <oop.h>
+#include <token.h>
+#include <tokenizer.h>
+#include <trackedstream.h>
 
 #define TYPENAME TokenStream
 
 OBJECT (const Tokenizer *tokenizer, CharStream *stream) INHERIT (Stream)
-  Tokenizer     *tokenizer;
-  ObjectArray   *next;
-END(NULL, NULL);
+  const Tokenizer *tokenizer;
+  ObjectArray     *next;
+END_OBJECT(NULL, NULL);
 
-void   _(close)()             VIRTUAL (close);
-Token *_(peek) ()             VIRTUAL (peek);
-Token *_(get)  ()             VIRTUAL (get);
-void   _(unget)(Token *token) VIRTUAL (unget);
-void   _(put)  (Token *token) VIRTUAL (put);
+void   _(Close)()             VIRTUAL (Close);
+Token *_(Peek) ()             VIRTUAL (Peek);
+Token *_(Get)  ()             VIRTUAL (Get);
+void   _(Unget)(Token *token) VIRTUAL (Unget);
+void   _(Put)  (Token *token) VIRTUAL (Put);
 
-TokenStream *STATIC (open) (const Tokenizer *tokenizer, const char *filename);
+TokenStream *STATIC (Open) (const Tokenizer *tokenizer, const char *filename);
 
 #undef TYPENAME
 #endif

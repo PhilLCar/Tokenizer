@@ -7,14 +7,16 @@
 // CUT
 #include <diagnostic.h>
 #include <oop.h>
+#include <exception.h>
 
 #define TYPENAME Regex
 
-OBJECT (const char *regex)
-  regex_t regex;
-END("");
+OBJECT (const char *regex) BASED (regex_t)
+END_OBJECT("");
 
-int _(matches)(const char *text);
+int CONST (Matches)(const char *text);
+
+// TODO: (low): Improvement: Implement more features
 
 #undef TYPENAME
 #endif

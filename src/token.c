@@ -3,9 +3,8 @@
 #define TYPENAME Token
 
 ////////////////////////////////////////////////////////////////////////////////
-Token *_(cons)(const char *text) {
-  if (this) {
-    String_cons((String*)this, text);
+Token *_(Construct)(const char *text) {
+  if (String_Construct((String*)this, text)) {
     this->line       = 0;
     this->position   = 0;
     this->group      = 0;
@@ -15,6 +14,7 @@ Token *_(cons)(const char *text) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(free)() {
-  String_free(BASE(0));
+void _(Destruct)()
+{
+  String_Destruct(BASE(0));
 }

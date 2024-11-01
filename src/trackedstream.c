@@ -3,19 +3,17 @@
 #define TYPENAME TrackedStream
 
 ////////////////////////////////////////////////////////////////////////////////
-TrackedStream *_(cons)(CharStream *stream, int lookahead)
+TrackedStream *_(Construct)(CharStream *stream, int lookahead)
 {
-  CharStream_cons(BASE(0), stream);
+  if (CharStream_Construct(BASE(0), stream)) {
+    String_Construct(&this->buffer, "");
+    Array_Construct(&this->linestack, sizeof(int));
 
-  if (this) {
-    String_cons(&this->buffer, "");
-    Array_cons(&this->linestack, sizeof(int));
-
-    this->line      = 0;
-    this->position  = 0;
+    this->line     = 0;
+    this->position = 0;
 
     for (int i = 0; i < lookahead; i++) {
-      String_append(&this->buffer, CharStream_get(stream));
+      String_Append(&this->buffer, CharStream_Get(stream));
     }
   }
 
@@ -23,26 +21,29 @@ TrackedStream *_(cons)(CharStream *stream, int lookahead)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(free)()
+void _(Destruct)()
 {
-  CharStream_free(BASE(0));
+  CharStream_Destruct(BASE(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(close)()
+void _(Close)()
 {
-  String_free(&this->buffer);
-  Array_free(&this->linestack);
-  DELETE (BASE(1)->base);
+  if (this)
+  {
+    String_Destruct(&this->buffer);
+    Array_Destruct(&this->linestack);
+    DELETE (BASE(1)->base);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(get)()
+int _(Get)()
 {
   int c = this->buffer.base[0];
 
   for (int i = 0; i < this->buffer.length - 1; i++) this->buffer.base[i] = this->buffer.base[i + 1];
-  this->buffer.base[this->buffer.length - 1] = CharStream_get(BASE(1)->base);
+  this->buffer.base[this->buffer.length - 1] = CharStream_Get(BASE(1)->base);
 
   if (((Stream*)BASE(1)->base)->eos) {
     this->buffer.base[this->buffer.length - 1] = 0;
@@ -50,7 +51,7 @@ int _(get)()
 
   if (c == '\n') {
     ++this->line;
-    Array_push(&this->linestack, &this->position);
+    Array_Push(&this->linestack, &this->position);
     this->position = 0;
   } else ++this->position;
 
@@ -60,14 +61,14 @@ int _(get)()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(unget)(int c)
+void _(Unget)(int c)
 {
-  CharStream_unget(BASE(1)->base, this->buffer.base[this->buffer.length - 1]);
+  CharStream_Unget(BASE(1)->base, this->buffer.base[this->buffer.length - 1]);
   for (int i = this->buffer.length - 1; i > 0; i--) this->buffer.base[i] = this->buffer.base[i - 1];
   
   if (c == '\n') {
     --this->line;
-    this->position = *(int*)Array_pop(&this->linestack);
+    this->position = *(int*)Array_Pop(&this->linestack);
   } else --this->position;
   
   this->buffer.base[0] = c;
@@ -76,9 +77,9 @@ void _(unget)(int c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(put)(int c)
+void _(Put)(int c)
 {
-  CharStream_put(BASE(1)->base, c);
+  CharStream_Put(BASE(1)->base, c);
   if (c == '\n') {
     ++this->line;
     this->position = 0;
@@ -86,15 +87,15 @@ void _(put)(int c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(skip)(int distance)
+void _(Skip)(int distance)
 {
   for (int i = 0; i < distance; i++) {
-    TrackedStream_get(this);
+    TrackedStream_Get(this);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(peek)(int distance)
+int _(Peek)(int distance)
 {
   int peek;
 
@@ -102,9 +103,9 @@ int _(peek)(int distance)
   else {
     String *s = NEW (String) ("");
     
-    for (int i = distance - this->buffer.length; i >= 0; i--) String_append(s, CharStream_get(BASE(1)->base));
+    for (int i = distance - this->buffer.length; i >= 0; i--) String_Append(s, CharStream_Get(BASE(1)->base));
     peek = this->buffer.base[distance - this->buffer.length];
-    for (int i = distance - this->buffer.length; i >= 0; i--) CharStream_unget(BASE(1)->base, s->base[i]);
+    for (int i = distance - this->buffer.length; i >= 0; i--) CharStream_Unget(BASE(1)->base, s->base[i]);
     
     DELETE (s);
   }

@@ -3,34 +3,34 @@
 #define TYPENAME Tokenizer
 
 /******************************************************************************/
-int STATIC (_intcmp)(const void *a, const void *b)
+int STATIC (intcmp)(const void *a, const void *b)
 {
 	return *(int*)b - *(int*)a;
 }
 
 /******************************************************************************/
-int STATIC (_lookahead)(Map *config)
+int STATIC (lookahead)(const Map *config)
 {
 	int lookahead = 1;
 
-	Array *symbols  = Map_vatkeyptr(config, "symbol");
-	Array *contexts = Map_vatkeyptr(config, "context");
+	const Array *symbols  = Map_ValueAtDeref(config, "symbol");
+	const Array *contexts = Map_ValueAtDeref(config, "context");
 
 	for (int i = 0; i < symbols->size; i++) {
-		Pair  *current = Array_at(symbols, i);
-		Array *list    = Pair_sptr(current);
+		const Pair  *current = Array_At(symbols, i);
+		const Array *list    = Pair_DerefS(current);
 
 		for (int j = 0; j < list->size; j++) {
-			String *symbol = Array_atptr(list, j);
+			const String *symbol = Array_AtDeref(list, j);
 
 			if (symbol->length > lookahead) lookahead = symbol->length;
 		}
 	}
 
 	for (int i = 0; i < contexts->size; i++) {
-		Pair   *current = Array_at(contexts, i);
-		Map    *context = Pair_sptr(current);
-		String *symbol  = Map_vatkeyptr(context, "open");
+		const Pair   *current = Array_At(contexts, i);
+		const Map    *context = Pair_DerefS(current);
+		const String *symbol  = Map_ValueAtDeref(context, "open");
 		
 		if (symbol->length > lookahead) lookahead = symbol->length;
 	}
@@ -39,106 +39,106 @@ int STATIC (_lookahead)(Map *config)
 }
 
 /******************************************************************************/
-int _(_creategroup)(const String *name, const Map *context)
+int _(creategroup)(const String *name, const Map *context)
 {
-	int groupid = Tokenizer_group(this, name->base);
+	int groupid = Tokenizer_Group(this, name->base);
 
 	if (groupid < 0) {
 		groupid = this->groups->base.size;
-		ObjectArray_push(this->groups, NEW (TokenizerGroup) (name));
+		ObjectArray_Push(this->groups, NEW (TokenizerGroup) (name));
 	}
 
 	return groupid;
 }
 
 /******************************************************************************/
-void _(_mapadd)(Map *map, int *key, void *element)
+void _(mapadd)(Map *map, int *key, void *element)
 {
 	Pair *pair = NULL;
 
-	if (!(pair = Map_atkey(map, key))) {
+	if (!(pair = Map_At(map, key))) {
 		pair = NEW (Pair) (map->key, map->value);
 
-		Pair_setf(pair, key);
-		Pair_sets(pair, NEW (ObjectArray) (OBJECT_TYPE(String)));
+		Pair_SetF(pair, key);
+		Pair_SetS(pair, NEW (ObjectArray) (OBJECT_TYPE(String)));
 
-		pair = ObjectArray_push((ObjectArray*)map, pair);
+		pair = ObjectArray_Push((ObjectArray*)map, pair);
 	}
 
-	ObjectArray_push(pair->second.object, element);
+	ObjectArray_Push(pair->second.object, element);
 }
 
 /******************************************************************************/
-void _(_iterate)(Map *config, const char *tag, const void (*addgroup)(Tokenizer*, void*, int))
+void _(iterate)(const Map *config, const char *tag, const void (*addgroup)(Tokenizer*, const void*, int))
 {
-	Array *section = Map_vatkeyptr(config, tag);
+	const Array *section = Map_ValueAtDeref(config, tag);
 
 	for (int i = 0; i < section->size; i++) {
-		Pair *current = Array_at(section, i);
+		const Pair *current = Array_At(section, i);
 
-		String *name   = current->first.object;
-		void   *object = Pair_sptr(current);
+		const String *name   = current->first.object;
+		const void   *object = Pair_DerefS(current);
 
-		int groupid = Tokenizer__creategroup(this, name, NULL);
+		int groupid = Tokenizer_creategroup(this, name, NULL);
 
 		addgroup(this, object, groupid);
 	}
 }
 
 /******************************************************************************/
-void _(_whitespace)(Map *config)
+void _(whitespace)(const Map *config)
 {
-	Array *whitespaces = Map_vatkeyptr(config, "whitespace");
+	const Array *whitespaces = Map_ValueAtDeref(config, "whitespace");
 
 	for (int i = 0; i < whitespaces->size; i++) {
-		String_append(this->whitespaces, ((String*)Array_atptr(whitespaces, i))->base[0]);
+		String_Append(this->whitespaces, ((const String*)Array_AtDeref(whitespaces, i))->base[0]);
 	}
 }
 
 /******************************************************************************/
-void _(_symbol)(void *symbols, int groupid)
+void _(symbol)(const void *symbols, int groupid)
 {
-	for (int j = 0; j < ((Array*)symbols)->size; j++) {
-		String *symbol    = Array_atptr(symbols, j);
-		Map    *dimension = Array_at((Array*)this->symbols, symbol->length - 1);
+	for (int j = 0; j < ((const Array*)symbols)->size; j++) {
+		const String *symbol    = Array_AtDeref(symbols, j);
+		Map          *dimension = Array_At((const Array*)this->symbols, symbol->length - 1);
 
-		Tokenizer__mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
+		Tokenizer_mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
 	}
 }
 
-void _(_keyword)(void *keywords, int groupid)
+void _(keyword)(const void *keywords, int groupid)
 {
-	for (int j = 0; j < ((Array*)keywords)->size; j++) {
-		String *keyword = Array_atptr(keywords, j);
+	for (int j = 0; j < ((const Array*)keywords)->size; j++) {
+		const String *keyword = Array_AtDeref(keywords, j);
 		
-		Tokenizer__mapadd(this, this->keywords, &groupid, NEW (String) (keyword->base));
+		Tokenizer_mapadd(this, this->keywords, &groupid, NEW (String) (keyword->base));
 	}
 }
 
-void _(_context)(void *context, int groupid)
+void _(context)(const void *context, int groupid)
 {
-	String *symbol    = Map_vatkeyptr(context, "open");
-	Map    *dimension = Array_at((Array*)this->symbols, symbol->length - 1);
+	const String *symbol    = Map_ValueAtDeref(context, "open");
+	Map          *dimension = Array_At((const Array*)this->symbols, symbol->length - 1);
 
-	Tokenizer__mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
+	Tokenizer_mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
 
-	((TokenizerGroup*)Array_at((Array*)this->groups, groupid))->context = NEW (TokenizerContext) (context);
+	((TokenizerGroup*)Array_At((const Array*)this->groups, groupid))->context = NEW (TokenizerContext) (context);
 }
 
-void _(_regex)(void *regex, int groupid)
+void _(regex)(const void *regex, int groupid)
 {
-	Map_setkey(this->regexes, &groupid, NEW (Regex) (((String*)regex)->base));
+	Map_Set(this->regexes, &groupid, NEW (Regex) (((const String*)regex)->base));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Tokenizer *_(cons)(Map *config)
+Tokenizer *_(Construct)(Map *config)
 {
   if (this) {
-		this->lookahead   = Tokenizer__lookahead(config);
+		this->lookahead   = Tokenizer_lookahead(config);
 		this->whitespaces = NEW (String) ("");
 		this->symbols     = NEW (ObjectArray) (OBJECT_TYPE(Map));
-		this->keywords    = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer__intcmp);
-		this->regexes     = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(Regex),       Tokenizer__intcmp);
+		this->keywords    = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer_intcmp);
+		this->regexes     = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(Regex),       Tokenizer_intcmp);
 		this->groups      = NEW (ObjectArray) (OBJECT_TYPE(TokenizerGroup));
 		
 
@@ -148,44 +148,48 @@ Tokenizer *_(cons)(Map *config)
 		 && this->regexes
 		 && this->groups) {
 			for (int i = 0; i < this->lookahead; i++) {
-				ObjectArray_push(this->symbols, NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer__intcmp));
+				ObjectArray_Push(this->symbols, NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer_intcmp));
 			}
 
-			Tokenizer__whitespace(this, config);
-			Tokenizer__iterate(this, config, "symbol",  Tokenizer__symbol);
-			Tokenizer__iterate(this, config, "keyword", Tokenizer__keyword);
-			Tokenizer__iterate(this, config, "context", Tokenizer__context);
-			Tokenizer__iterate(this, config, "regex",   Tokenizer__regex);
+			Tokenizer_whitespace(this, config);
+			Tokenizer_iterate(this, config, "symbol",  Tokenizer_symbol);
+			Tokenizer_iterate(this, config, "keyword", Tokenizer_keyword);
+			Tokenizer_iterate(this, config, "context", Tokenizer_context);
+			Tokenizer_iterate(this, config, "regex",   Tokenizer_regex);
 		} else {
-			Tokenizer_free(this);
-			this = NULL;
+			THROW (NEW (MemoryAllocationException)());
+			DELETE(this);
 		}
-  }
 
-	DELETE (config);
+		DELETE (config);
+  } else {
+		THROW (NEW (MemoryAllocationException)());
+	}
 
   return this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void _(free)()
+void _(Destruct)()
 {
-	DELETE (this->whitespaces);
-	DELETE (this->symbols);
-	DELETE (this->keywords);
-	DELETE (this->regexes);
-	DELETE (this->groups);
+	if (this) {
+		DELETE (this->whitespaces);
+		DELETE (this->symbols);
+		DELETE (this->keywords);
+		DELETE (this->regexes);
+		DELETE (this->groups);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(group)(const char *name)
+int CONST (Group)(const char *name)
 {
 	int index = -1;
 
 	for (int i = 0; i < this->groups->base.size; i++) {
-		TokenizerGroup *group = Array_at((Array*)this->groups, i);
+		const String* group = Array_At((const Array*)this->groups, i);
 
-		if (String_eq(group->name, name)) {
+		if (String_Eq(group, name)) {
 			index = i;
 			break;
 		}
@@ -195,7 +199,7 @@ int _(group)(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(whitespace)(String *search)
+int CONST (WhiteSpace)(const String *search)
 {
 	for (int i = 0; i < this->whitespaces->length; i++) {
 		if (search->base[0] == this->whitespaces->base[i]) {
@@ -207,21 +211,21 @@ int _(whitespace)(String *search)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(symbol)(String *search, int *size)
+int CONST (Symbol)(const String *search, int *size)
 {
 	for (int i = this->lookahead - 1; i>= 0; i--) {
-		Array* dimension = Array_at((Array*)this->symbols, i);
+		const Array* dimension = Array_At((const Array*)this->symbols, i);
 
 		for (int j = 0; j < dimension->size; j++) {
-			Pair *current = Array_at(dimension, j);
+			const Pair *current = Array_At(dimension, j);
 
-			int   *id      = current->first.object;
-			Array *symbols = current->second.object;
+			const int   *id      = current->first.object;
+			const Array *symbols = current->second.object;
 
 			for (int k = 0; k < symbols->size; k++) {
-				String *symbol = Array_at(symbols, k);
+				const String *symbol = Array_At(symbols, k);
 
-				if(String_strw(search, symbol->base)) {
+				if(String_StartsWith(search, symbol->base)) {
 					*size = symbol->length;
 					return *id;
 				}
@@ -233,15 +237,15 @@ int _(symbol)(String *search, int *size)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(regex)(String *search)
+int CONST (Regex)(const String *search)
 {
-	for (int i = 0; i < ((Array*)this->regexes)->size; i++) {
-		Pair *current = Array_at((Array*)this->regexes, i);
+	for (int i = 0; i < ((const Array*)this->regexes)->size; i++) {
+		const Pair *current = Array_At((const Array*)this->regexes, i);
 
-		int   *id    = current->first.object;
-		Regex *regex = current->second.object;
+		const int   *id    = current->first.object;
+		const Regex *regex = current->second.object;
 
-		if(Regex_matches(regex, search->base)) {
+		if(Regex_Matches(regex, search->base)) {
 			return *id;
 		}
 	}
@@ -250,18 +254,18 @@ int _(regex)(String *search)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int _(keyword)(String *search)
+int CONST (Keyword)(const String *search)
 {
-	for (int i = 0; i < ((Array*)this->keywords)->size; i++) {
-		Pair *current = Array_at((Array*)this->keywords, i);
+	for (int i = 0; i < ((const Array*)this->keywords)->size; i++) {
+		const Pair *current = Array_At((const Array*)this->keywords, i);
 
-		int   *id       = current->first.object;
-		Array *keywords = current->second.object;
+		const int   *id       = current->first.object;
+		const Array *keywords = current->second.object;
 
 		for (int j = 0; j < keywords->size; j++) {
-			String *keyword = Array_at(keywords, j);
+			const String *keyword = Array_At(keywords, j);
 
-			if(String_strw(search, keyword->base)) {
+			if (String_Equals(search, keyword)) {
 				return *id;
 			}
 		}
@@ -270,7 +274,9 @@ int _(keyword)(String *search)
 	return -1;
 }
 
-Tokenizer *STATIC (open)(const char *filename)
+Tokenizer *STATIC (Open)(const char *filename)
 {
-	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename));
+	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, 1));
 }
+
+#undef TYPENAME
