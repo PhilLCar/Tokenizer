@@ -276,7 +276,7 @@ int CONST (Keyword)(const String *search)
 
 Tokenizer *STATIC (Open)(const char *filename)
 {
-	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, 1));
+	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, FILEACCESS_READ));
 }
 
 #undef TYPENAME
