@@ -60,7 +60,7 @@ void _(mapadd)(Map *map, int *key, void *element)
 		pair = NEW (Pair) (map->key, map->value);
 
 		Pair_SetF(pair, key);
-		Pair_SetS(pair, NEW (ObjectArray) (OBJECT_TYPE(String)));
+		Pair_SetS(pair, NEW (ObjectArray) (TYPEOF (String)));
 
 		pair = ObjectArray_Push((ObjectArray*)map, pair);
 	}
@@ -136,10 +136,10 @@ Tokenizer *_(Construct)(Map *config)
   if (this) {
 		this->lookahead   = Tokenizer_lookahead(config);
 		this->whitespaces = NEW (String) ("");
-		this->symbols     = NEW (ObjectArray) (OBJECT_TYPE(Map));
-		this->keywords    = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer_intcmp);
-		this->regexes     = NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(Regex),       Tokenizer_intcmp);
-		this->groups      = NEW (ObjectArray) (OBJECT_TYPE(TokenizerGroup));
+		this->symbols     = NEW (ObjectArray) (TYPEOF (Map));
+		this->keywords    = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray), Tokenizer_intcmp);
+		this->regexes     = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (Regex),       Tokenizer_intcmp);
+		this->groups      = NEW (ObjectArray) (TYPEOF (TokenizerGroup));
 		
 
 		if (this->whitespaces 
@@ -148,7 +148,7 @@ Tokenizer *_(Construct)(Map *config)
 		 && this->regexes
 		 && this->groups) {
 			for (int i = 0; i < this->lookahead; i++) {
-				ObjectArray_Push(this->symbols, NEW (Map) (NATIVE_TYPE(int), OBJECT_TYPE(ObjectArray), Tokenizer_intcmp));
+				ObjectArray_Push(this->symbols, NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray), Tokenizer_intcmp));
 			}
 
 			Tokenizer_whitespace(this, config);
@@ -276,7 +276,7 @@ int CONST (Keyword)(const String *search)
 
 Tokenizer *STATIC (Open)(const char *filename)
 {
-	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, FILEACCESS_READ));
+	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, ACCESS_READ));
 }
 
 #undef TYPENAME

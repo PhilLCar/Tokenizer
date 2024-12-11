@@ -7,7 +7,7 @@ TokenStream *_(Construct)(const Tokenizer *tokenizer, CharStream *stream)
 {
   if (Stream_Construct(BASE(0), NEW (TrackedStream) (stream, tokenizer->lookahead))) {
     this->tokenizer = tokenizer;
-    this->next      = NEW (ObjectArray)   (OBJECT_TYPE(Token));
+    this->next      = NEW (ObjectArray) (TYPEOF (Token));
   }
 
   return this;
