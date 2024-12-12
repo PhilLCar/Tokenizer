@@ -13,12 +13,12 @@ int STATIC (lookahead)(const Map *config)
 {
 	int lookahead = 1;
 
-	const Array *symbols  = Map_ValueAtDeref(config, "symbol");
-	const Array *contexts = Map_ValueAtDeref(config, "context");
+	const Array *symbols  = Map_ValueAtKeyDeref(config, "symbol");
+	const Array *contexts = Map_ValueAtKeyDeref(config, "context");
 
 	for (int i = 0; i < symbols->size; i++) {
 		const Pair  *current = Array_At(symbols, i);
-		const Array *list    = Pair_DerefS(current);
+		const Array *list    = Pair_SDeref(current);
 
 		for (int j = 0; j < list->size; j++) {
 			const String *symbol = Array_AtDeref(list, j);
@@ -29,8 +29,8 @@ int STATIC (lookahead)(const Map *config)
 
 	for (int i = 0; i < contexts->size; i++) {
 		const Pair   *current = Array_At(contexts, i);
-		const Map    *context = Pair_DerefS(current);
-		const String *symbol  = Map_ValueAtDeref(context, "open");
+		const Map    *context = Pair_SDeref(current);
+		const String *symbol  = Map_ValueAtKeyDeref(context, "open");
 		
 		if (symbol->length > lookahead) lookahead = symbol->length;
 	}
@@ -71,13 +71,13 @@ void _(mapadd)(Map *map, int *key, void *element)
 /******************************************************************************/
 void _(iterate)(const Map *config, const char *tag, const void (*addgroup)(Tokenizer*, const void*, int))
 {
-	const Array *section = Map_ValueAtDeref(config, tag);
+	const Array *section = Map_ValueAtKeyDeref(config, tag);
 
 	for (int i = 0; i < section->size; i++) {
 		const Pair *current = Array_At(section, i);
 
 		const String *name   = current->first.object;
-		const void   *object = Pair_DerefS(current);
+		const void   *object = Pair_SDeref(current);
 
 		int groupid = Tokenizer_creategroup(this, name, NULL);
 
@@ -88,7 +88,7 @@ void _(iterate)(const Map *config, const char *tag, const void (*addgroup)(Token
 /******************************************************************************/
 void _(whitespace)(const Map *config)
 {
-	const Array *whitespaces = Map_ValueAtDeref(config, "whitespace");
+	const Array *whitespaces = Map_ValueAtKeyDeref(config, "whitespace");
 
 	for (int i = 0; i < whitespaces->size; i++) {
 		String_Append(this->whitespaces, ((const String*)Array_AtDeref(whitespaces, i))->base[0]);
@@ -117,7 +117,7 @@ void _(keyword)(const void *keywords, int groupid)
 
 void _(context)(const void *context, int groupid)
 {
-	const String *symbol    = Map_ValueAtDeref(context, "open");
+	const String *symbol    = Map_ValueAtKeyDeref(context, "open");
 	Map          *dimension = Array_At((const Array*)this->symbols, symbol->length - 1);
 
 	Tokenizer_mapadd(this, dimension, &groupid, NEW (String) (symbol->base));
@@ -137,9 +137,13 @@ Tokenizer *_(Construct)(Map *config)
 		this->lookahead   = Tokenizer_lookahead(config);
 		this->whitespaces = NEW (String) ("");
 		this->symbols     = NEW (ObjectArray) (TYPEOF (Map));
-		this->keywords    = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray), Tokenizer_intcmp);
-		this->regexes     = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (Regex),       Tokenizer_intcmp);
+		this->keywords    = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray));
+		this->regexes     = NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (Regex));
 		this->groups      = NEW (ObjectArray) (TYPEOF (TokenizerGroup));
+
+		// Set a custom comparer
+		this->keywords->comparer = Tokenizer_intcmp;
+		this->regexes->comparer  = Tokenizer_intcmp;
 		
 
 		if (this->whitespaces 
@@ -148,7 +152,8 @@ Tokenizer *_(Construct)(Map *config)
 		 && this->regexes
 		 && this->groups) {
 			for (int i = 0; i < this->lookahead; i++) {
-				ObjectArray_Push(this->symbols, NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray), Tokenizer_intcmp));
+				((Map*)ObjectArray_Push(this->symbols, NEW (Map) (TYPEOF (NATIVE(int)), TYPEOF (ObjectArray))))
+					->comparer = Tokenizer_intcmp;
 			}
 
 			Tokenizer_whitespace(this, config);
