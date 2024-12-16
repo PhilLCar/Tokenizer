@@ -49,7 +49,7 @@ void _(mapadd)(Map *map, int key, void *element)
 {
 	Pair *pair = NULL;
 
-	if (!(pair = Map_At(map, key))) {
+	if (!(pair = Map_At(map, &key))) {
 		pair = NEW (Pair) ();
 
 		Pair_SetValueF(pair, TYPEOF (int), &key);
@@ -118,7 +118,7 @@ void _(context)(const void *context, int groupid)
 
 void _(regex)(const void *regex, int groupid)
 {
-	Map_Set(this->regexes, groupid, NEW (Regex) (((const String*)regex)->base));
+	Map_Set(this->regexes, &groupid, NEW (Regex) (((const String*)regex)->base));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
