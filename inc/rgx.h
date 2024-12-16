@@ -11,7 +11,7 @@
 
 #define TYPENAME Regex
 
-OBJECT (const char *regex) BASED (regex_t)
+OBJECT (const char *regex) INHERIT (regex_t)
 END_OBJECT("");
 
 int CONST (Matches)(const char *text);

@@ -11,7 +11,7 @@
 
 #define TYPENAME TokenizerGroup
 
-OBJECT (const String *name) INHERIT(String)
+OBJECT (const String *name) INHERIT (String)
   TokenizerContext *context;
 END_OBJECT(NEW (String)(""));
 

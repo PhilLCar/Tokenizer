@@ -6,9 +6,9 @@
 TokenizerContext *_(Construct)(const Map *map)
 {
   if (this) {
-    String *escape = Map_ValueAtKeyDeref((Map*)map, "escape");
-    String *open   = Map_ValueAtKeyDeref((Map*)map, "open");
-    String *close  = Map_ValueAtKeyDeref((Map*)map, "close");
+    String *escape = Map_ValueAtKey((Map*)map, "escape");
+    String *open   = Map_ValueAtKey((Map*)map, "open");
+    String *close  = Map_ValueAtKey((Map*)map, "close");
 
     if (open) {
       this->escape = escape ? escape->base[0] : 0;
