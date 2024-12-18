@@ -7,21 +7,21 @@ int STATIC (lookahead)(const Map *config)
 {
 	int lookahead = 1;
 
-	const Array *symbols  = Map_ValueAtKey(config, "symbol");
-	const Array *contexts = Map_ValueAtKey(config, "context");
+	const List *symbols  = Map_ValueAtKey(config, "symbol");
+	const List *contexts = Map_ValueAtKey(config, "context");
 
-	for (int i = 0; i < symbols->size; i++) {
-		const Pair  *current = Array_At(symbols, i);
+	for (const List *s = symbols; !List_Empty(s); s = List_Next(s)) {
+		const Pair *current = List_Head(s);
 
-		for (List *l = current->second; !List_Empty(l); l = List_Next(l)) {
+		for (const List *l = current->second; !List_Empty(l); l = List_Next(l)) {
 			const String *symbol = List_Head(l);
 
 			if (symbol->length > lookahead) lookahead = symbol->length;
 		}
 	}
 
-	for (int i = 0; i < contexts->size; i++) {
-		const Pair   *current = Array_At(contexts, i);
+	for (const List *c = contexts; !List_Empty(c); c = List_Next(c)) {
+		const Pair   *current = List_Head(c);
 		const Map    *context = current->second;
 		const String *symbol  = Map_ValueAtKey(context, "open");
 		
@@ -47,15 +47,10 @@ int _(creategroup)(const String *name, const Map *context)
 /******************************************************************************/
 void _(mapadd)(Map *map, int key, void *element)
 {
-	Pair *pair = NULL;
+	Pair *pair = Map_At(map, &key);
 
-	if (!(pair = Map_At(map, &key))) {
-		pair = NEW (Pair) ();
-
-		Pair_SetValueF(pair, TYPEOF (int), &key);
-		Pair_SetS(pair, NEW (ObjectArray) (TYPEOF (String)));
-
-		pair = ObjectArray_Push((ObjectArray*)map, pair);
+	if (!pair) {
+		pair = Map_Set(map, NEW (int) (key), NEW (ObjectArray) (TYPEOF(String)));
 	}
 
 	ObjectArray_Push(pair->second, element);
@@ -64,10 +59,10 @@ void _(mapadd)(Map *map, int key, void *element)
 /******************************************************************************/
 void _(iterate)(const Map *config, const char *tag, const void (*addgroup)(Tokenizer*, const void*, int))
 {
-	const Array *section = Map_ValueAtKey(config, tag);
+	const List *section = Map_ValueAtKey(config, tag);
 
-	for (int i = 0; i < section->size; i++) {
-		const Pair *current = Array_At(section, i);
+	for (const List *l = section; !List_Empty(l); l = List_Next(l)) {
+		const Pair *current = List_Head(l);
 
 		const String *name   = current->first;
 		const void   *object = current->second;
@@ -81,7 +76,7 @@ void _(iterate)(const Map *config, const char *tag, const void (*addgroup)(Token
 /******************************************************************************/
 void _(whitespace)(const Map *config)
 {
-	for (List *l = Map_ValueAtKey(config, "whitespace"); !List_Empty(l); l = List_Next(l)) {
+	for (const List *l = Map_ValueAtKey(config, "whitespace"); !List_Empty(l); l = List_Next(l)) {
 		String_Append(this->whitespaces, ((const String*)List_Head(l))->base[0]);
 	}
 }
@@ -118,7 +113,7 @@ void _(context)(const void *context, int groupid)
 
 void _(regex)(const void *regex, int groupid)
 {
-	Map_Set(this->regexes, &groupid, NEW (Regex) (((const String*)regex)->base));
+	Map_Set(this->regexes, NEW (int)(groupid), NEW (Regex) (((const String*)regex)->base));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,10 +189,10 @@ int CONST (WhiteSpace)(const String *search)
 int CONST (Symbol)(const String *search, int *size)
 {
 	for (int i = this->lookahead - 1; i>= 0; i--) {
-		const Array* dimension = Array_At((const Array*)this->symbols, i);
+		const List* dimension = Array_At((const Array*)this->symbols, i);
 
-		for (int j = 0; j < dimension->size; j++) {
-			const Pair *current = Array_At(dimension, j);
+		for (const List *l = dimension; !List_Empty(l); l = List_Next(l)) {
+			const Pair *current = List_Head(l);
 
 			const int   *id      = current->first;
 			const Array *symbols = current->second;
@@ -219,8 +214,8 @@ int CONST (Symbol)(const String *search, int *size)
 ////////////////////////////////////////////////////////////////////////////////
 int CONST (Regex)(const String *search)
 {
-	for (int i = 0; i < ((const Array*)this->regexes)->size; i++) {
-		const Pair *current = Array_At((const Array*)this->regexes, i);
+	for (const List *l = (const List*)this->regexes; !List_Empty(l); l = List_Next(l)) {
+		const Pair *current = List_Head(l);
 
 		const int   *id    = current->first;
 		const Regex *regex = current->second;
@@ -236,8 +231,8 @@ int CONST (Regex)(const String *search)
 ////////////////////////////////////////////////////////////////////////////////
 int CONST (Keyword)(const String *search)
 {
-	for (int i = 0; i < ((const Array*)this->keywords)->size; i++) {
-		const Pair *current = Array_At((const Array*)this->keywords, i);
+	for (const List *l = (const List*)this->keywords; !List_Empty(l); l = List_Next(l)) {
+		const Pair *current = List_Head(l);
 
 		const int   *id       = current->first;
 		const Array *keywords = current->second;
@@ -254,6 +249,7 @@ int CONST (Keyword)(const String *search)
 	return -1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 Tokenizer *STATIC (Open)(const char *filename)
 {
 	return NEW (Tokenizer)((Map*) NEW (JSONFile) (filename, ACCESS_READ));
